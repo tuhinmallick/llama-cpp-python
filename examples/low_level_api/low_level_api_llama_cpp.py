@@ -90,8 +90,8 @@ while remaining_tokens > 0:
             if len(embd) >= n_batch:
                 break
     if not input_noecho:
+        size = 32
         for id in embd:
-            size = 32
             buffer = (ctypes.c_char * size)()
             n = llama_cpp.llama_token_to_piece_with_model(
                 model, llama_cpp.llama_token(id), buffer, size)
@@ -102,7 +102,7 @@ while remaining_tokens > 0:
                 flush=True,
             )
 
-    if len(embd) > 0 and embd[-1] == llama_cpp.llama_token_eos(ctx):
+    if embd and embd[-1] == llama_cpp.llama_token_eos(ctx):
         break
 
 print()

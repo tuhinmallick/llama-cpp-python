@@ -54,10 +54,14 @@ def _get_system_message(
     messages: List[llama_types.ChatCompletionRequestMessage],
 ) -> str:
     """Get the first system message."""
-    for message in messages:
-        if message["role"] == "system":
-            return message["content"] or ""
-    return ""
+    return next(
+        (
+            message["content"] or ""
+            for message in messages
+            if message["role"] == "system"
+        ),
+        "",
+    )
 
 
 def _map_roles(
@@ -78,10 +82,7 @@ def _format_llama2(
     """Format the prompt with the llama2 style."""
     ret = system_message + sep
     for role, message in messages:
-        if message:
-            ret += role + message + " "
-        else:
-            ret += role + " "
+        ret += role + message + " " if message else f"{role} "
     return ret
 
 
@@ -91,10 +92,7 @@ def _format_add_colon_single(
     """Format the prompt with the add-colon-single style."""
     ret = system_message + sep
     for role, message in messages:
-        if message:
-            ret += role + ": " + message + sep
-        else:
-            ret += role + ":"
+        ret += f"{role}: {message}{sep}" if message else f"{role}:"
     return ret
 
 
@@ -105,10 +103,7 @@ def _format_add_colon_two(
     seps = [sep, sep2]
     ret = system_message + seps[0]
     for i, (role, message) in enumerate(messages):
-        if message:
-            ret += role + ": " + message + seps[i % 2]
-        else:
-            ret += role + ":"
+        ret += f"{role}: {message}{seps[i % 2]}" if message else f"{role}:"
     return ret
 
 
@@ -118,10 +113,7 @@ def _format_no_colon_single(
     """Format the prompt with the no-colon-single style."""
     ret = system_message
     for role, message in messages:
-        if message:
-            ret += role + message + sep
-        else:
-            ret += role
+        ret += role + message + sep if message else role
     return ret
 
 
@@ -131,10 +123,7 @@ def _format_add_colon_space_single(
     """Format the prompt with the add-colon-space-single style."""
     ret = system_message + sep
     for role, message in messages:
-        if message:
-            ret += role + ": " + message + sep
-        else:
-            ret += role + ": "  # must be end with a space
+        ret += f"{role}: {message}{sep}" if message else f"{role}: "
     return ret
 
 
@@ -142,12 +131,9 @@ def _format_chatml(
     system_message: str, messages: List[Tuple[str, Optional[str]]], sep: str
 ) -> str:
     """Format the prompt with the chatml style."""
-    ret = "" if system_message == "" else system_message + sep + "\n"
+    ret = "" if not system_message else system_message + sep + "\n"
     for role, message in messages:
-        if message:
-            ret += role + "\n" + message + sep + "\n"
-        else:
-            ret += role + "\n"
+        ret += role + "\n" + message + sep + "\n" if message else role + "\n"
     return ret
 
 
@@ -676,12 +662,12 @@ def functionary_chat_handler(
         function_call = completion_text[14:-1]
         new_prompt = prompt + completion_text + stop
     elif isinstance(function_call, str) and function_call != "none":
-        new_prompt = prompt + f"assistant:\n"
+        new_prompt = f"{prompt}assistant:\n"
     elif isinstance(function_call, dict):
-        new_prompt = prompt + f"assistant to={function_call['name']}:\n"
+        new_prompt = f"{prompt}assistant to={function_call['name']}:\n"
         function_call = function_call["name"]
     else:
-        new_prompt = prompt + f"assistant:\n"
+        new_prompt = f"{prompt}assistant:\n"
 
     completion: llama_types.Completion = llama.create_completion(
         prompt=new_prompt, stop=["user:", "</s>"], stream=False

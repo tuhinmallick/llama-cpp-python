@@ -4,9 +4,7 @@ from common import GptParams
 from low_level_api_chat_cpp import LLaMAInteract
 
 def env_or_def(env, default):
-	if (env in os.environ):
-		return os.environ[env]
-	return default
+	return os.environ.get(env, default)
 
 AI_NAME = env_or_def("AI_NAME", "ChatLLaMa")
 MODEL = env_or_def("MODEL", "./models/llama-13B/ggml-model.bin")
@@ -14,7 +12,7 @@ USER_NAME = env_or_def("USER_NAME", "USER")
 N_PREDICTS = int(env_or_def("N_PREDICTS", "2048"))
 N_THREAD = int(env_or_def("N_THREAD", "8"))
 
-today = datetime.datetime.today()
+today = datetime.datetime.now()
 DATE_YEAR=today.strftime("%Y")
 DATE_TIME=today.strftime("%H:%M")
 

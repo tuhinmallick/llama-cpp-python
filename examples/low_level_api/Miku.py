@@ -4,9 +4,7 @@ from common import GptParams
 from low_level_api_chat_cpp import LLaMAInteract
 
 def env_or_def(env, default):
-	if (env in os.environ):
-		return os.environ[env]
-	return default
+	return os.environ.get(env, default)
 
 AI_NAME = env_or_def("AI_NAME", "Miku")
 MODEL = env_or_def("MODEL", "./models/llama-13B/ggml-model.bin")
