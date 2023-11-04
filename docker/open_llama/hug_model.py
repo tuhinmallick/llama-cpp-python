@@ -9,9 +9,8 @@ def make_request(url, params=None):
     response = requests.get(url, params=params)
     if response.status_code == 200:
         return json.loads(response.text)
-    else:
-        print(f"Request failed with status code {response.status_code}")
-        return None
+    print(f"Request failed with status code {response.status_code}")
+    return None
 
 def check_magic_and_version(filename):
     with open(filename, 'rb') as f:
@@ -115,7 +114,7 @@ def main():
 
     # Choose the model
     model_list.sort(key=lambda x: x[0])
-    if len(model_list) == 0:
+    if not model_list:
         print("No models found")
         exit(1)
     elif len(model_list) == 1:

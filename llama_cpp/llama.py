@@ -72,7 +72,7 @@ class LlamaRAMCache(BaseLlamaCache):
 
     @property
     def cache_size(self):
-        return sum([state.llama_state_size for state in self.cache_state.values()])
+        return sum(state.llama_state_size for state in self.cache_state.values())
 
     def _find_longest_prefix_key(
         self,
@@ -205,7 +205,7 @@ class StoppingCriteriaList(List[StoppingCriteria]):
     def __call__(
         self, input_ids: npt.NDArray[np.intc], logits: npt.NDArray[np.single]
     ) -> bool:
-        return any([stopping_criteria(input_ids, logits) for stopping_criteria in self])
+        return any(stopping_criteria(input_ids, logits) for stopping_criteria in self)
 
 
 class Llama:
@@ -496,10 +496,10 @@ class Llama:
                 add_bos,
                 special
             )
-            if n_tokens < 0:
-                raise RuntimeError(
-                    f'Failed to tokenize: text="{text}" n_tokens={n_tokens}'
-                )
+        if n_tokens < 0:
+            raise RuntimeError(
+                f'Failed to tokenize: text="{text}" n_tokens={n_tokens}'
+            )
         return list(tokens[:n_tokens])
 
     def detokenize(self, tokens: List[int]) -> bytes:
@@ -523,9 +523,7 @@ class Llama:
             output += bytes(buffer[:n])
         # NOTE: Llama1 models automatically added a space at the start of the prompt
         # this line removes a leading space if the first token is a beginning of sentence token
-        return (
-            output[1:] if len(tokens) > 0 and tokens[0] == self.token_bos() else output
-        )
+        return output[1:] if tokens and tokens[0] == self.token_bos() else output
 
     def set_cache(self, cache: Optional[BaseLlamaCache]):
         """Set the cache.
@@ -559,7 +557,7 @@ class Llama:
                 self.batch.pos[i] = n_past + i
                 self.batch.seq_id[i][0] = 0
                 self.batch.n_seq_id[i] = 1
-                self.batch.logits[i] = True if self.context_params.logits_all else False
+                self.batch.logits[i] = bool(self.context_params.logits_all)
             self.batch.logits[n_tokens - 1] = True
             return_code = llama_cpp.llama_decode(
                 ctx=self.ctx,
@@ -872,11 +870,7 @@ class Llama:
         if self.verbose:
             llama_cpp.llama_reset_timings(self.ctx)
 
-        if isinstance(input, str):
-            inputs = [input]
-        else:
-            inputs = input
-
+        inputs = [input] if isinstance(input, str) else input
         data: List[EmbeddingData] = []
         total_tokens = 0
         for index, input in enumerate(inputs):

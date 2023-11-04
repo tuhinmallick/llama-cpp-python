@@ -33,8 +33,9 @@ def get_base_type(annotation):
     if getattr(annotation, '__origin__', None) is Literal:
         return type(annotation.__args__[0])
     elif getattr(annotation, '__origin__', None) is Union:
-        non_optional_args = [arg for arg in annotation.__args__ if arg is not type(None)]
-        if non_optional_args:
+        if non_optional_args := [
+            arg for arg in annotation.__args__ if arg is not type(None)
+        ]:
             return get_base_type(non_optional_args[0])
     elif getattr(annotation, '__origin__', None) is list or getattr(annotation, '__origin__', None) is List:
         return get_base_type(annotation.__args__[0])
